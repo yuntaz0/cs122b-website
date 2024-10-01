@@ -43,8 +43,10 @@ function fish_prompt --description 'Write out the prompt'
     # toolbox environment
     if test -e /run/.toolboxenv && set -l toolbox_name $(string match -rg 'name="(.*)"' </run/.containerenv)
         echo -n -s $prompt_color $iam $normal '@' $prompt_color $toolbox_name ' '
+    # AWS cloud environment
+    else if test -e /var/log/cloud-init.log
+        echo -n -s $prompt_color $iam $normal '@' $prompt_color $hostname ' '
     end
-
     echo -s $prompt_status ' ' $status_color $suffix $vcs_color (fish_git_prompt) $normal
     # current directory
     echo -s '🧭 ' $normal (prompt_pwd | sed "s#/var/home/$iam#~#" | sed "s#/#$color_slash/$color_reset#g")
