@@ -1,0 +1,13 @@
+[core]
+	pager = delta
+	excludesfile = "~/.gitignore_global"
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true     # use n and N to move between diff sections
+	light = false	# set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+	side-by-side = true # side by side view
+	line-numbers = true # show line numbers
+	true-color = always
