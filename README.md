@@ -16,7 +16,7 @@ it should give `/usr/lib/jvm/java-11-openjdk-amd64/bin/java` as one of the optio
 
 ## mysql
 
-1. login via sudo
+1. login as root user via sudo
 
 ```sh
 sudo mysql
@@ -28,13 +28,15 @@ sudo mysql
 CREATE USER 'mytestuser'@'localhost' IDENTIFIED BY '123123'; GRANT ALL PRIVILEGES ON *.* TO 'testuser'@'localhost' WITH GRANT OPTION;
 ```
 
+SET GLOBAL general_log = 'ON';
+
 3. log
 
 ```
-log_error       /var/log/mysql/error.log
-general_log_file        /var/lib/mysql/ip-172-31-44-36.log
-slow_query_log_file     /var/lib/mysql/ip-172-31-44-36-slow.log
-datadir /var/lib/mysql/
+log_error               /var/log/mysql/error.log
+general_log_file        /var/lib/mysql/$hostname.log
+slow_query_log_file     /var/lib/mysql/$hostname.log
+datadir                 /var/lib/mysql/
 ```
 
 4. log in as root user
@@ -55,3 +57,10 @@ datadir /var/lib/mysql/
   - run `/usr/share/tomcat10/bin/startup.sh` to start, because systemctl does not work for dbx container
   - `server.xml` and `web.xml` are missing -> cp from `/etc/tomcat10` and `chmod o+r` them for intellij to copy
   - if firefox auto set it to https, website port 8080 does not work. Use http instead.
+
+- `ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (2)`
+
+  ```sh
+  sudo service mysql --full-restart
+  ```
+
