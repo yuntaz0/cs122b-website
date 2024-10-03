@@ -64,3 +64,20 @@ datadir                 /var/lib/mysql/
   sudo service mysql --full-restart
   ```
 
+## mysql
+
+- run a script on a specific database
+
+```sh
+mysql database_name < script.sql
+```
+
+- run a command on a specific database
+
+```sh
+mysql moviedb -e "cmd"
+```
+
+```sh
+mysql -e "USE database; cmd"
+```
