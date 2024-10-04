@@ -228,6 +228,24 @@ Essentially, JDBC is an API that tanslates Java code to run a variety of relatio
 	- tomcat10 seems to create a folder for each one
 	- the name of the folder should be appended to the url to access page from browser
 
+- SQL NULL to Java null
+
+	- NULL means the field is empty, and it is not the same as 0 or “”
+	- String getString(int columnIndex) retrieves the column value as a String and returns null if the SQL value is NULL.
+	- int getInt​(int columnIndex) returns the column value; if the value is SQL NULL, the value returned is 0
+	- In JDBC, you must explicitly ask if a field is null by using wasNull()
+
+		```java
+		String name = rs.getString(1); // Retrieves the value of the first column
+		if (name == null) {
+			// The value was SQL NULL
+			System.out.println("The value is NULL");
+		} else {
+			System.out.println("Value: " + name);
+		}
+		```
+
+
 ## Tomcat10
 
 - Servlet: a small program that runs on a web server often accessing databases in response to client input
