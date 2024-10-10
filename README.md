@@ -270,6 +270,19 @@ JRE
 
 ### Common Issues
 
+- check if tomcat 10 is running
+	- from aws instance
+	- `curl localhost:8080`
+- firewall
+	- `sudo ufw allow from any to any port 8080 proto tcp`
+- setup tomcat manager
+	- `sudoedit /etc/tomcat10/tomcat-users.xml`
+```xml
+<role rolename="manager-gui"/>  
+<user username="admin" password="mypassword" roles="manager-gui"/>
+```
+- inbound rule:
+	- custom tcp port 8080 and your ip addr
 - `tomcat10-admin` is required for management
 - Tomcat 10 can be managed at `/usr/share/tomcat10`, which is not the idea way
 	- use when `systemctl` is not available
@@ -309,7 +322,7 @@ drwxr-xr-x. 1 root root 36 Oct 10 10:55 ROOT/
 
 - If Firefox auto set it to `https`, website port 8080 does not work. Use `http` instead.
 - cannot shutdown due to `SEVERE: No shutdown port configured. Shut down server through OS signal. Server not shut down.`
-	- change `server.xml` in `/usr/share/tomcat10/conf/` so it have `<Server port="8005" shutdown="SHUTDOWN">`. the default value is `-1`
+	- change `server.xml` in `sudoedit /etc/tomcat10/server.xml` so it have `<Server port="8005" shutdown="SHUTDOWN">`. the default value is `-1`
 
 - `WARNING: java.io.tmpdir directory does not exist`
 - `sudoedit /usr/share/tomcat10/bin/setenv.sh`
