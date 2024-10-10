@@ -271,7 +271,7 @@ JRE
 ### Common Issues
 
 - check if tomcat 10 is running
-	- from aws instance
+	- from AWS instance
 	- `curl localhost:8080`
 - firewall
 	- `sudo ufw allow from any to any port 8080 proto tcp`
@@ -282,7 +282,7 @@ JRE
 <user username="admin" password="mypassword" roles="manager-gui"/>
 ```
 - inbound rule:
-	- custom tcp port 8080 and your ip addr
+	- custom TCP port 8080 and your IP address
 - `tomcat10-admin` is required for management
 - Tomcat 10 can be managed at `/usr/share/tomcat10`, which is not the idea way
 	- use when `systemctl` is not available
