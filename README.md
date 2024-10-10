@@ -1,11 +1,11 @@
-# READ ME
+# README
 
 Java-based full-stack web application
 
 ## Required packages
 
 ```
-fd-find ripgrep tomcat10 fzf fish mysql-server openjdk-11-jdk neovim git-delta maven
+fd-find ripgrep tomcat10 fzf fish mysql-server openjdk-11-jdk neovim git-delta maven tomcat10-admin
 ```
 
 There may be a issue with default java version
@@ -37,8 +37,8 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 
 	```mysql
 	String url = "jdbc:mysql://localhost:3306/moviedbexample";
-	String user = "myuser";
-	String password = "mypassword";
+	String user = "username";
+	String password = "password";
 	Connection connection = DriverManager.getConnection(url, user, password);
 	```
 
@@ -46,8 +46,8 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	- close statement when done `stmt.close();` - consumes resources on both the **Java side** (within the JDBC driver) and the **database side** (potentially holding locks or other resources).
 
 	```mysql
-	String query = "SELECT * FROM movies WHERE year = ?"; 
-	PreparedStatement stmt = connection.prepareStatement(query); 
+	String query = "SELECT * FROM movies WHERE year = ?";
+	PreparedStatement stmt = connection.prepareStatement(query);
 	stmt.setInt(1, 2023); // Set the value for the parameter `?`
 	```
 
@@ -60,10 +60,10 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 		```mysql
 		// Create a CallableStatement to call a stored procedure
 		CallableStatement stmt = connection.prepareCall("{call getMultipleResults()}");
-		
+
 		// Execute the stored procedure
 		boolean hasResults = stmt.execute(); // Returns true if the first result is a ResultSet
-		
+
 		// Process all results
 		while (hasResults) {
 		    ResultSet resultSet = stmt.getResultSet(); // Get the current ResultSet
@@ -73,19 +73,19 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 		    }
 		    // Close the current ResultSet
 		    resultSet.close();
-		    
+
 		    // Move to the next result (could be another ResultSet or an update count)
 		    hasResults = stmt.getMoreResults(); // Returns true if there is another ResultSet
 		}
-		
+
 		// Close the CallableStatement
 		stmt.close();
 		```
-		
+
 	```mysql
 	ResultSet resultSet = stmt.executeQuery();
 	```
-	
+
 5. Process the `ResultSet` - SQL returns data - a cursor that points to the rows returned by the query
 	- iterate through the returned rows and retrieve data from each column
 	- JDBC handles data conversion between Java and SQL types
@@ -98,7 +98,7 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	    System.out.println("Movie: " + title + ", Year: " + year);
 	}
 	```
-	
+
 6. Closing the `Connection` to prevent resource leaks and keeps the database server from getting overloaded
 	- For connection pool, instead of closing, the connection is usually return to the pool - it is reused for the next client that needs a connection.
 
@@ -106,12 +106,12 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	Connection connection = null;
 	Statement statement = null;
 	ResultSet resultSet = null;
-	
+
 	try {
 	    connection = dataSource.getConnection();
 	    statement = connection.createStatement();
 	    resultSet = statement.executeQuery("SELECT * FROM movies");
-	
+
 	    while (resultSet.next()) {
 	        String title = resultSet.getString("title");
 	        System.out.println("Movie: " + title);
@@ -127,7 +127,7 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	            e.printStackTrace();
 	        }
 	    }
-	    
+
 	    // Close Statement second
 	    if (statement != null) {
 	        try {
@@ -136,7 +136,7 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	            e.printStackTrace();
 	        }
 	    }
-	
+
 	    // Close Connection last
 	    if (connection != null) {
 	        try {
@@ -147,14 +147,14 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	    }
 	}
 	// Or use Apache Common DbUtils
-	
+
 	} finally {
 		DbUtils.closeQuietly(rs);
 		DbUtils.closeQuietly(ps);
 		DbUtils.closeQuietly(conn);
 	}
 	```
-		
+
 ### Common Issue
 
 - login as root user via sudo
@@ -166,8 +166,11 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 - add `mytestuser` and grant permissions
 
 	```mysql
-	CREATE USER 'mytestuser'@'localhost' IDENTIFIED BY '123123'; GRANT ALL PRIVILEGES ON *.* TO 'testuser'@'localhost' WITH GRANT OPTION;
+	CREATE USER 'mytestuser'@'localhost' IDENTIFIED BY 'My6$Password'; GRANT ALL PRIVILEGES ON *.* TO 'testuser'@'localhost' WITH GRANT OPTION;
 	```
+
+- ERROR 1044 (42000)
+	- Did not grant permission! Check the above command!
 
 - enable MySQL logs
 
@@ -206,7 +209,7 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 	```
 
 - cannot login as `mytestuser` due to `ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (13)`
-	
+
 	```sh
 	mysql -h 127.0.0.1 -P 3306 -u <user> -p <database>
 	```
@@ -240,7 +243,7 @@ Essentially, JDBC is an API that translates Java code to run a variety of relati
 		```
 
 
-## Tomcat10
+## Tomcat 10
 
 - Servlet: a small program that runs on a web server often accessing databases in response to client input
 - **Servlet container** (aka web container): a part of a webserver that interacts with **Java Servlets** (Java classes that handle requests and generate response).
@@ -268,42 +271,126 @@ JRE
 ### Common Issues
 
 - `tomcat10-admin` is required for management
-- Tomcat 10 is at `/usr/share/tomcat10`
-- if log directory is missing at the begin
+- Tomcat 10 can be managed at `/usr/share/tomcat10`, which is not the idea way
+	- use when `systemctl` is not available
+	- multiple files will be missing, need to manually set up environment
+- soft link all missing files before `sudo /usr/share/tomcat10/bin/startup.sh`
+	- `webapp` is missing
+		- `sudo ln -s /var/lib/tomcat10/webapps /usr/share/tomcat10/`
+	- `log` is missing
+		- `sudo ln -s /var/lib/tomcat10/logs /usr/share/tomcat10/`
+	- `conf` is missing 
+		- `sudo ln -s /etc/tomcat10 /usr/share/tomcat10/conf`
+	- `manager` is missing from default `webapp`
+		- `sudo ln -s /usr/share/tomcat10-admin/host-manager/ /var/lib/tomcat10/webapps/`
+		- `sudo ln -s /usr/share/tomcat10-admin/manager /var/lib/tomcat10/webapps/`
 
-	```sh
-	sudo mkdir -p /usr/share/tomcat10/logs/
-	```
+```
+🧭 /usr/share/tomcat10  
+ll  
+total 20K  
+drwxr-xr-x. 1 root root  360 Oct 10 10:55 bin/  
+lrwxrwxrwx. 1 root root   13 Oct 10 12:51 conf -> /etc/tomcat10/  
+-rw-r--r--. 1 root root 1017 Dec  3  2023 default.template  
+drwxr-xr-x. 1 root root  202 Oct 10 10:55 etc/  
+drwxr-xr-x. 1 root root  842 Oct 10 10:55 lib/  
+-rw-r--r--. 1 root root  150 Dec  3  2023 logrotate.template  
+lrwxrwxrwx. 1 root root   22 Oct 10 12:49 logs -> /var/lib/tomcat10/logs/  
+lrwxrwxrwx. 1 root root   25 Oct 10 12:51 webapps -> /var/lib/tomcat10/webapps/  
+drwxr-x---. 1 root root   16 Oct 10 12:25 work/
 
-- `server.xml` and `web.xml` are missing: copy from `/etc/tomcat10` and `chmod o+r` them for IntelliJ to copy
+🧭 /var/lib/tomcat10/webapps  
+ll  
+total 8.0K  
+lrwxrwxrwx. 1 root root 39 Oct 10 12:44 host-manager -> /usr/share/tomcat10-admin/host-manager//  
+lrwxrwxrwx. 1 root root 33 Oct 10 12:44 manager -> /usr/share/tomcat10-admin/manager/  
+drwxr-xr-x. 1 root root 36 Oct 10 10:55 ROOT/
+```
+
 - If Firefox auto set it to `https`, website port 8080 does not work. Use `http` instead.
 - cannot shutdown due to `SEVERE: No shutdown port configured. Shut down server through OS signal. Server not shut down.`
 	- change `server.xml` in `/usr/share/tomcat10/conf/` so it have `<Server port="8005" shutdown="SHUTDOWN">`. the default value is `-1`
 
-## Development
+- `WARNING: java.io.tmpdir directory does not exist`
+- `sudoedit /usr/share/tomcat10/bin/setenv.sh`
+```sh
+export CATALINA_TMPDIR=/tmp
+export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=/tmp"
+```
+## Maven
 
+- starting project
+	- `mvn archetype:generate`: generate new project based on an archetype
+	- `-DgroupId=edu.uci.ics`: group ID for the project, typically represents the organization or company creating the project. It follows a reverse domain name convention
+	- `-DartifactId=fablix-webapp`: the name of the project and the final build artifact
+	- `-DarchetypeArtifactId=maven-archetype-webapp`: archetype template to use for generating the project; `maven-archetype-webapp` is a Maven archetype that provides the basic structure for a web application project.
+	- `-DarchetypeArtifactId=maven-archetype-webapp`: run the command in non-interactive mode
+
+```sh
+mvn archetype:generate -DgroupId=edu.uci.ics -DartifactId=fablix -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=false
+```
+	
+- `pom.xml`: Project Object Model file, which serves as the main configuration file for a Maven project. It defines the project's structure, dependency, build configuration, and other essential settings that Maven uses to manage the project.
+	- Manage dependencies: declare the external libraries and frameworks. Maven automatically download these from a central repository and include them in the project.
+	- Define project's metadata
+		- `groupId`: one per org
+		- `artifactId`: one per project
+		- `version`
+	- Configure build settings
+		- customize the build process, like `warSourceDirectory` is set to `WebContent`
+	- Define Project Modules: manage multi module project with one `pom.xml`
+	- Manage the project life cycle: Maven has a defined project life cycle; how each stage of the life cycle is handled
+		- compile
+		- test
+		- package
+		- install
+		- deploy
+	- Plugin: Maven supports various plugin that extend its functionality. These plugins are also defined in `pom.xml` and executed as part of the build life cycle
+		- `maven-compiler-plugin`: compiles Java source code
+		- `maven-war-plugin`: packages that project as a WAR for web applications
+		- `maven-surefire-plugin`: runs unit tests
+
+- `src/main`
+	- `src/main/java`: all java source code (classes, servlets, etc.). Maven compiles this code into `.class` files during the build process
+	- `src/main/resource`: all non-Java resource, such as configuration files or other assets that the Java code may need. These files are automatically added to the class path during runtime
+	- `src/main/webapp`: `WebContent` in the project. This is for web-related resources like HTML, JSP, CSS, JavaScript, and images. This folder is packaged into your WAR file and is where web resources are served from.
+	- Follow package structure if needed, but not required. Package deceleration
+		- `edu.uci.ics`
+		- `src/main/java/edu/uci/ics`
+		- `package edu.uci.ics`
+
+- `mvn clean install`: clean the project, force Maven to download any missing dependencies and attempt to build the project again
+- `mvn clean package`: rebuild the WAR package
 - **War**: packaging `mvn package` WAR file will be generated in the target directory
 - Tomcat Deployment:
 	1. Deploy WAR file to `webapps/`. Tomcat will automatically unpack and deploy the application when it starts
 	2. run `sudo /usr/share/tomcat10/bin/startup.sh` to start
-	3. run `/usr/share/tomcat10/bin/shutdown.sh` to stop
+	3. run `sudo /usr/share/tomcat10/bin/shutdown.sh` to stop
+
+## Jakarta
+
+- The **Jakarta Servlet API** enables Java servlets to process **HTTP requests** from clients (browsers) and return dynamic responses (like HTML, JSON).
+- `HttpServletRequest` and `HttpServletResponse` provide access to the details of the request and allow you to build the response.
+- **Servlets** use this API to interact with **backend data (e.g., databases)** and return processed content to the client.
 
 ## Structure
 
 ```
 my-web-app/
- ├── src/
- │    ├── main/
- │    │    ├── java/
- │    │    │    └── com/example/  (Java classes)
- │    │    ├── resources/
- │    │    │    └── application.properties  (Config files)
- │    │    └── webapp/
- │    │         ├── WEB-INF/
- │    │         │     └── web.xml  (Servlet configurations)
- │    │         ├── index.jsp  (JSP pages)
- │    │         └── static/  (CSS, JS)
- │    └── test/  (Unit tests)
- ├── pom.xml  (Maven build file)
-
+├── pom.xml  
+├── src
+│   ├── test/  (Unit tests)
+│   └── main  
+│       ├── java  
+│       │   └── com/example/  (Java classes) 
+│       └── resources/  
+│           └── application.properties  (Config files)
+├── target  
+│   ├── classes
+│   ├── fablix-webapp/
+│   ├── fablix-webapp.war  
+└── WebContent  
+   ├── index.jsp  
+   └── WEB-INF  
+       └── web.xml
 ```
