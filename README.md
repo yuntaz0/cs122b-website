@@ -340,7 +340,7 @@ export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=/tmp"
 	- `-DarchetypeArtifactId=maven-archetype-webapp`: run the command in non-interactive mode
 
 ```sh
-mvn archetype:generate -DgroupId=edu.uci.ics -DartifactId=fablix -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=false
+mvn archetype:generate -DgroupId=edu.uci.ics -DartifactId=fablix-webapp -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=false
 ```
 	
 - `pom.xml`: Project Object Model file, which serves as the main configuration file for a Maven project. It defines the project's structure, dependency, build configuration, and other essential settings that Maven uses to manage the project.
